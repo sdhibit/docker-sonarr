@@ -1,18 +1,70 @@
-FROM sdhibit/alpine-runit:3.6
-MAINTAINER Steve Hibit <sdhibit@gmail.com>
+FROM frolvlad/alpine-mono
+MAINTAINER tim@haak.co
 
-# Add Testing Repository
-RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+ENV LANG='en_US.UTF-8' \
+    LANGUAGE='en_US.UTF-8' \
+    TERM='xterm'
 
-# Install apk packages
+# Add Repositories
+RUN echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+
+# Install runit & helpful packages
 RUN apk --update upgrade \
  && apk --no-cache add \
-  ca-certificates \
-  libmediainfo@testing \
-  mono@testing \
-  sqlite \
-  tar \
-  unrar
+  curl \
+  runit@community \
+  su-exec 
+
+ADD start_runit /sbin/
+
+RUN chmod a+x /sbin/start_runit \
+ && mkdir -p /etc/container_environment \
+    /etc/service \
+    /etc/runit_init.d 
+
+CMD ["/sbin/start_runit"]
+
+ARG MEDIAINFO_VER="0.7.97"
+ARG LIBMEDIAINFO_URL="https://mediaarea.net/download/binary/libmediainfo0/${MEDIAINFO_VER}/MediaInfo_DLL_${MEDIAINFO_VER}_GNU_FromSource.tar.gz"
+ARG MEDIAINFO_URL="https://mediaarea.net/download/binary/mediainfo/${MEDIAINFO_VER}/MediaInfo_CLI_${MEDIAINFO_VER}_GNU_FromSource.tar.gz"
+
+#Build libmediainfo
+#Install build packages
+RUN apk --update upgrade \
+ && apk add --no-cache --virtual=build-dependencies \
+        g++ \
+        gcc \
+        git \
+        make \
+ && apk --update upgrade \
+ && apk add --no-cache \
+    ca-certificates \
+    curl \
+    libcurl \
+    libmms \
+    sqlite \
+    sqlite-libs \
+    tar \
+    unrar \
+    xz \
+    zlib \
+    zlib-dev \
+ && mkdir -p /tmp/libmediainfo \
+ && mkdir -p /tmp/mediainfo \
+ && curl -kL ${LIBMEDIAINFO_URL} | tar -xz -C /tmp/libmediainfo --strip-components=1 \
+ && curl -kL ${MEDIAINFO_URL} | tar -xz -C /tmp/mediainfo --strip-components=1 \
+ && cd /tmp/mediainfo \
+ && ./CLI_Compile.sh \
+ && cd /tmp/mediainfo/MediaInfo/Project/GNU/CLI \
+ && make install \
+ && cd /tmp/libmediainfo \
+ && ./SO_Compile.sh \
+ && cd /tmp/libmediainfo/ZenLib/Project/GNU/Library \
+ && make install \
+ && cd /tmp/libmediainfo/MediaInfoLib/Project/GNU/Library \
+ && make install \
+ && apk del --purge build-dependencies \
+ && rm -rf /tmp/*
 
 # Set Sonarr Package Information
 ENV PKG_NAME NzbDrone
