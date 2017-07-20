@@ -1,4 +1,4 @@
-FROM sdhibit/mono:5.4
+FROM sdhibit/mono:5.0-glibc
 MAINTAINER Steve Hibit <sdhibit@gmail.com>
 
 ENV LANG='en_US.UTF-8' \
