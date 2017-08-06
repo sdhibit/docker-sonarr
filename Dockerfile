@@ -50,7 +50,7 @@ RUN apk --update upgrade \
 # Set Sonarr Package Information
 ENV PKG_NAME NzbDrone
 ENV PKG_VER 2.0
-ENV PKG_BUILD 0.4855
+ENV PKG_BUILD 0.4928
 ENV APP_BASEURL https://update.sonarr.tv/v2/master/mono
 ENV APP_PKGNAME ${PKG_NAME}.master.${PKG_VER}.${PKG_BUILD}.mono.tar.gz
 ENV APP_URL ${APP_BASEURL}/${APP_PKGNAME}
